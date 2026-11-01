@@ -53,6 +53,10 @@ h2{font-size:16px;margin:28px 0 10px}
 .item .a{font-weight:700;font-variant-numeric:tabular-nums}
 .item button{border:0;background:none;color:var(--mute);cursor:pointer;width:36px;height:36px;border-radius:8px;font-size:18px}
 .item button:hover{color:var(--exp)}
+.item button[data-edit]:hover{color:var(--ink)}
+.item.edit{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.cancel{border:1px solid var(--line);background:none;padding:10px;border-radius:10px;cursor:pointer;min-height:44px;color:var(--mute)}
+[hidden]{display:none!important}
 .empty{text-align:center;color:var(--mute);padding:28px 8px;border:1px dashed var(--line);border-radius:12px}
 .tools{display:flex;gap:8px;margin-top:24px}
 .tools button{flex:1;border:1px solid var(--line);background:var(--card);padding:10px;border-radius:10px;cursor:pointer;min-height:44px}
@@ -93,6 +97,7 @@ h2{font-size:16px;margin:28px 0 10px}
     <label>備註<input id="note" type="text" maxlength="40" placeholder="例如：午餐便當"></label>
     <p class="err" id="err"></p>
     <button class="add" id="add">新增一筆</button>
+    <button class="cancel" id="cancel" hidden>取消修改</button>
   </div>
 
   <h2>支出分類</h2>
@@ -121,6 +126,7 @@ h2{font-size:16px;margin:28px 0 10px}
 
   var $=function(id){return document.getElementById(id)};
   var type="exp";
+  var editId=null;
   var today=new Date();
   var cur={y:today.getFullYear(),m:today.getMonth()};
   function iso(d){var p=function(n){return String(n).padStart(2,"0")};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
@@ -174,9 +180,9 @@ h2{font-size:16px;margin:28px 0 10px}
         var dt=ms.filter(function(x){return x.date===i.date}).reduce(function(s,x){return s+(x.type==="inc"?x.amount:-x.amount)},0);
         html+='<div class="day"><span>'+(d.getMonth()+1)+"/"+d.getDate()+"（"+"日一二三四五六".charAt(d.getDay())+"）</span><span>"+(dt<0?"-":"")+"$"+fmt(Math.abs(dt))+"</span></div>";
       }
-      html+='<div class="item"><div class="m"><b>'+esc(i.cat)+'</b>'+((i.pay||i.note)?'<span>'+esc([i.pay,i.note].filter(Boolean).join(" · "))+'</span>':"")+'</div>'
+      html+='<div class="item'+(i.id===editId?" edit":"")+'"><div class="m"><b>'+esc(i.cat)+'</b>'+((i.pay||i.note)?'<span>'+esc([i.pay,i.note].filter(Boolean).join(" · "))+'</span>':"")+'</div>'
         +'<div class="a '+(i.type==="inc"?"inc":"exp")+'">'+(i.type==="inc"?"+":"-")+"$"+fmt(i.amount)+'</div>'
-        +'<button data-del="'+i.id+'" aria-label="刪除這一筆">✕</button></div>';
+        +'<button data-edit="'+i.id+'" aria-label="修改這一筆">✎</button><button data-del="'+i.id+'" aria-label="刪除這一筆">✕</button></div>';
     });
     $("list").innerHTML=html;
   }
@@ -186,18 +192,37 @@ h2{font-size:16px;margin:28px 0 10px}
     if(!(a>0)){$("err").textContent="請輸入大於 0 的金額。";$("amt").focus();return;}
     if(!$("date").value){$("err").textContent="請選擇日期。";return;}
     $("err").textContent="";
-    items.push({id:Date.now(),type:type,amount:a,cat:$("cat").value,pay:$("pay").value,date:$("date").value,note:$("note").value.trim()});
+    var rec={id:editId||Date.now(),type:type,amount:a,cat:$("cat").value,pay:$("pay").value,date:$("date").value,note:$("note").value.trim()};
+    if(editId){items=items.map(function(i){return i.id===editId?rec:i});}else{items.push(rec);}
     save();
     var p=$("date").value.split("-");cur={y:+p[0],m:+p[1]-1};
     $("amt").value="";$("note").value="";
+    stopEdit();
     render();
   };
   $("amt").addEventListener("keydown",function(e){if(e.key==="Enter")$("add").click();});
   $("note").addEventListener("keydown",function(e){if(e.key==="Enter")$("add").click();});
 
+  function startEdit(id){
+    var it=items.filter(function(i){return String(i.id)===id})[0];
+    if(!it)return;
+    editId=it.id;
+    setType(it.type);
+    $("cat").value=it.cat;$("amt").value=it.amount;$("date").value=it.date;$("note").value=it.note||"";
+    if(it.pay)$("pay").value=it.pay;
+    $("add").textContent="儲存修改";$("cancel").hidden=false;$("err").textContent="";
+    render();
+    $("amt").scrollIntoView({behavior:"smooth",block:"center"});$("amt").focus();
+  }
+  function stopEdit(){editId=null;$("add").textContent="新增一筆";$("cancel").hidden=true;}
+  $("cancel").onclick=function(){stopEdit();$("amt").value="";$("note").value="";$("err").textContent="";render();};
   $("list").onclick=function(e){
-    var id=e.target.getAttribute&&e.target.getAttribute("data-del");
+    var t=e.target;if(!t.getAttribute)return;
+    var ed=t.getAttribute("data-edit");
+    if(ed){startEdit(ed);return;}
+    var id=t.getAttribute("data-del");
     if(!id)return;
+    if(String(editId)===id){stopEdit();$("amt").value="";$("note").value="";}
     items=items.filter(function(i){return String(i.id)!==id});
     save();render();
   };
@@ -208,7 +233,7 @@ h2{font-size:16px;margin:28px 0 10px}
   $("clear").onclick=function(){
     if(!armed){armed=true;$("clear").textContent="再按一次確認清除";setTimeout(function(){armed=false;$("clear").textContent="清除本月資料";},3000);return;}
     items=items.filter(function(i){return !inMonth(i)});
-    save();armed=false;$("clear").textContent="清除本月資料";render();
+    stopEdit();save();armed=false;$("clear").textContent="清除本月資料";render();
   };
 
   $("pay").innerHTML=PAY.map(function(c){return "<option>"+c+"</option>"}).join("");
