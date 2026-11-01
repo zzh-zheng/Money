@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>記帳本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f1;--card:#fff;--ink:#17302b;--mute:#6b7f7a;--line:#d9e2df;--inc:#1f8a70;--exp:#d1495b;--acc:#f2b134;--accink:#3a2a00;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1c19;--card:#182b27;--ink:#e6f1ee;--mute:#8da39d;--line:#2a403b;--inc:#4cc3a3;--exp:#ff7a8a;--acc:#f2b134;--accink:#3a2a00;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1c19;--card:#182b27;--ink:#e6f1ee;--mute:#8da39d;--line:#2a403b;--inc:#4cc3a3;--exp:#ff7a8a;--acc:#f2b134;--accink:#3a2a00;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:20px;margin:0;font-weight:700}
+.month{display:flex;align-items:center;gap:4px}
+.month button{width:36px;height:36px;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer}
+.month span{min-width:96px;text-align:center;font-weight:500}
+.hero{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
+.hero small{color:var(--mute)}
+.bal{font-size:clamp(40px,12vw,60px);font-weight:900;line-height:1.1;letter-spacing:-1px;margin:2px 0 14px;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
+.bar i{display:block;transition:width .4s}
+.bar .bi{background:var(--inc)}.bar .be{background:var(--exp)}
+.sum{display:flex;justify-content:space-between;margin-top:10px;font-size:15px}
+.sum b{font-variant-numeric:tabular-nums}
+.inc{color:var(--inc)}.exp{color:var(--exp)}
+.form{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:8px;border-radius:8px;cursor:pointer;font-weight:500;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:grid;gap:3px;font-size:13px;color:var(--mute)}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:44px}
+.add{border:0;background:var(--acc);color:var(--accink);font-weight:700;padding:12px;border-radius:10px;cursor:pointer;min-height:46px}
+.err{color:var(--exp);font-size:13px;min-height:1em;margin:0}
+h2{font-size:16px;margin:28px 0 10px}
+.cats{display:grid;gap:8px}
+.cat{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;font-size:14px}
+.cat .t{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.cat .t i{display:block;height:100%;background:var(--exp);border-radius:5px}
+.day{margin-top:14px;color:var(--mute);font-size:13px;display:flex;justify-content:space-between}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px}
+.item .m{flex:1;min-width:0}
+.item .m b{display:block;font-weight:500}
+.item .m span{font-size:13px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.item .a{font-weight:700;font-variant-numeric:tabular-nums}
+.item button{border:0;background:none;color:var(--mute);cursor:pointer;width:36px;height:36px;border-radius:8px;font-size:18px}
+.item button:hover{color:var(--exp)}
+.empty{text-align:center;color:var(--mute);padding:28px 8px;border:1px dashed var(--line);border-radius:12px}
+.tools{display:flex;gap:8px;margin-top:24px}
+.tools button{flex:1;border:1px solid var(--line);background:var(--card);padding:10px;border-radius:10px;cursor:pointer;min-height:44px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>記帳本</h1>
+    <div class="month">
+      <button id="prev" aria-label="上個月">‹</button>
+      <span id="mlabel"></span>
+      <button id="next" aria-label="下個月">›</button>
+    </div>
+  </div>
+
+  <section class="hero" aria-live="polite">
+    <small>本月結餘</small>
+    <div class="bal" id="bal">0</div>
+    <div class="bar"><i class="bi" id="bi" style="width:0"></i><i class="be" id="be" style="width:0"></i></div>
+    <div class="sum"><span>收入 <b class="inc" id="sin">0</b></span><span>支出 <b class="exp" id="sex">0</b></span></div>
+  </section>
+
+  <div class="form">
+    <div class="seg" role="group" aria-label="類型">
+      <button id="tExp" aria-pressed="true">支出</button>
+      <button id="tInc" aria-pressed="false">收入</button>
+    </div>
+    <div class="row">
+      <label>金額<input id="amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      <label>日期<input id="date" type="date"></label>
+    </div>
+    <div class="row">
+      <label>分類<select id="cat"></select></label>
+      <label>付款方式<select id="pay"></select></label>
+    </div>
+    <label>備註<input id="note" type="text" maxlength="40" placeholder="例如：午餐便當"></label>
+    <p class="err" id="err"></p>
+    <button class="add" id="add">新增一筆</button>
+  </div>
+
+  <h2>支出分類</h2>
+  <div class="cats" id="cats"></div>
+
+  <h2>付款方式</h2>
+  <div class="cats" id="pays"></div>
+
+  <h2>明細</h2>
+  <div id="list"></div>
+
+  <div class="tools">
+    <button id="clear">清除本月資料</button>
+  </div>
+</main>
+
+<script>
+(function(){
+  var EXP=["飲食","交通","購物","化妝品/保養品","娛樂","居住","醫療","學習","其他"];
+  var INC=["薪資","獎金","零用錢","投資","化妝品/保養品","其他"];
+  var PAY=["現金","LINE Pay","街口支付","iPASS MONEY","信用卡","悠遊卡","轉帳","其他"];
+  var KEY="expense-tracker-v1";
+  var items=[];
+  try{var raw=localStorage.getItem(KEY);if(raw)items=JSON.parse(raw)||[];}catch(e){items=[];}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}}
+
+  var $=function(id){return document.getElementById(id)};
+  var type="exp";
+  var today=new Date();
+  var cur={y:today.getFullYear(),m:today.getMonth()};
+  function iso(d){var p=function(n){return String(n).padStart(2,"0")};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
+  $("date").value=iso(today);
+  var fmt=function(n){return Math.round(n).toLocaleString("zh-TW")};
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]});}
+
+  function fillCats(){
+    var list=type==="exp"?EXP:INC;
+    $("cat").innerHTML=list.map(function(c){return "<option>"+c+"</option>"}).join("");
+  }
+  function setType(t){
+    type=t;
+    $("tExp").setAttribute("aria-pressed",t==="exp");
+    $("tInc").setAttribute("aria-pressed",t==="inc");
+    fillCats();
+  }
+  $("tExp").onclick=function(){setType("exp")};
+  $("tInc").onclick=function(){setType("inc")};
+
+  function inMonth(it){var p=it.date.split("-");return +p[0]===cur.y&&+p[1]-1===cur.m;}
+
+  function render(){
+    $("mlabel").textContent=cur.y+" 年 "+(cur.m+1)+" 月";
+    var ms=items.filter(inMonth).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:b.id-a.id;});
+    var inc=0,exp=0,by={},pb={};
+    ms.forEach(function(i){if(i.type==="inc")inc+=i.amount;else{exp+=i.amount;by[i.cat]=(by[i.cat]||0)+i.amount;var pk=i.pay||"未標示";pb[pk]=(pb[pk]||0)+i.amount;}});
+    var bal=inc-exp;
+    $("bal").textContent=(bal<0?"-":"")+"$"+fmt(Math.abs(bal));
+    $("sin").textContent="$"+fmt(inc);
+    $("sex").textContent="$"+fmt(exp);
+    var tot=inc+exp;
+    $("bi").style.width=tot?(inc/tot*100)+"%":"0";
+    $("be").style.width=tot?(exp/tot*100)+"%":"0";
+
+    var ck=Object.keys(by).sort(function(a,b){return by[b]-by[a]});
+    $("cats").innerHTML=ck.length?ck.map(function(k){
+      return '<div class="cat"><span>'+esc(k)+'</span><div class="t"><i style="width:'+(by[k]/exp*100)+'%"></i></div><b>$'+fmt(by[k])+'</b></div>';
+    }).join(""):'<div class="empty">本月還沒有支出</div>';
+    var pks=Object.keys(pb).sort(function(a,b){return pb[b]-pb[a]});
+    $("pays").innerHTML=pks.length?pks.map(function(k){
+      return '<div class="cat"><span>'+esc(k)+'</span><div class="t"><i style="width:'+(pb[k]/exp*100)+'%"></i></div><b>$'+fmt(pb[k])+'</b></div>';
+    }).join(""):'<div class="empty">本月還沒有支出</div>';
+
+    if(!ms.length){$("list").innerHTML='<div class="empty">本月還沒有紀錄。在上方輸入金額，按「新增一筆」。</div>';return;}
+    var html="",last="";
+    ms.forEach(function(i){
+      if(i.date!==last){
+        last=i.date;
+        var d=new Date(i.date+"T00:00:00");
+        var dt=ms.filter(function(x){return x.date===i.date}).reduce(function(s,x){return s+(x.type==="inc"?x.amount:-x.amount)},0);
+        html+='<div class="day"><span>'+(d.getMonth()+1)+"/"+d.getDate()+"（"+"日一二三四五六".charAt(d.getDay())+"）</span><span>"+(dt<0?"-":"")+"$"+fmt(Math.abs(dt))+"</span></div>";
+      }
+      html+='<div class="item"><div class="m"><b>'+esc(i.cat)+'</b>'+((i.pay||i.note)?'<span>'+esc([i.pay,i.note].filter(Boolean).join(" · "))+'</span>':"")+'</div>'
+        +'<div class="a '+(i.type==="inc"?"inc":"exp")+'">'+(i.type==="inc"?"+":"-")+"$"+fmt(i.amount)+'</div>'
+        +'<button data-del="'+i.id+'" aria-label="刪除這一筆">✕</button></div>';
+    });
+    $("list").innerHTML=html;
+  }
+
+  $("add").onclick=function(){
+    var a=parseFloat($("amt").value);
+    if(!(a>0)){$("err").textContent="請輸入大於 0 的金額。";$("amt").focus();return;}
+    if(!$("date").value){$("err").textContent="請選擇日期。";return;}
+    $("err").textContent="";
+    items.push({id:Date.now(),type:type,amount:a,cat:$("cat").value,pay:$("pay").value,date:$("date").value,note:$("note").value.trim()});
+    save();
+    var p=$("date").value.split("-");cur={y:+p[0],m:+p[1]-1};
+    $("amt").value="";$("note").value="";
+    render();
+  };
+  $("amt").addEventListener("keydown",function(e){if(e.key==="Enter")$("add").click();});
+  $("note").addEventListener("keydown",function(e){if(e.key==="Enter")$("add").click();});
+
+  $("list").onclick=function(e){
+    var id=e.target.getAttribute&&e.target.getAttribute("data-del");
+    if(!id)return;
+    items=items.filter(function(i){return String(i.id)!==id});
+    save();render();
+  };
+  $("prev").onclick=function(){cur.m--;if(cur.m<0){cur.m=11;cur.y--;}render();};
+  $("next").onclick=function(){cur.m++;if(cur.m>11){cur.m=0;cur.y++;}render();};
+
+  var armed=false;
+  $("clear").onclick=function(){
+    if(!armed){armed=true;$("clear").textContent="再按一次確認清除";setTimeout(function(){armed=false;$("clear").textContent="清除本月資料";},3000);return;}
+    items=items.filter(function(i){return !inMonth(i)});
+    save();armed=false;$("clear").textContent="清除本月資料";render();
+  };
+
+  $("pay").innerHTML=PAY.map(function(c){return "<option>"+c+"</option>"}).join("");
+  fillCats();render();
+})();
+</script>
+</body>
+</html>
