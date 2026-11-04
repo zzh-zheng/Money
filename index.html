@@ -140,6 +140,7 @@ h2{font-size:16px;margin:28px 0 10px}
   <label>密碼（至少 6 碼）<input id="pw" type="password" autocomplete="current-password"></label>
   <p class="err" id="aerr"></p>
   <button class="add" id="login">登入</button>
+  <button class="cancel" id="google">用 Google 登入</button>
   <button class="cancel" id="signup">註冊新帳號</button>
   <button class="lnk" id="forgot">忘記密碼</button>
   <button class="lnk" id="skip">先不登入（只存在這支手機）</button>
@@ -326,7 +327,7 @@ window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDom
   if(cloudConfigured){document.querySelector("main").style.visibility="hidden";setTimeout(function(){if(!revealed){reveal();acctUI();msg("無法連線雲端，目前只存在這支手機。");}},7000);}
   $("acctbtn").onclick=function(){if(cloud.on&&window.Cloud)window.Cloud.logout();else $("auth").hidden=false;};
   function aerr(t){$("aerr").textContent=t;}
-  function authMsg(e){var c=(e&&e.code)||"";return /invalid-credential|wrong-password|user-not-found/.test(c)?"Email 或密碼不正確":/email-already/.test(c)?"這個 Email 已註冊過，請直接登入":/weak-password/.test(c)?"密碼至少要 6 碼":/invalid-email/.test(c)?"Email 格式不正確":/network/.test(c)?"網路連線失敗":/too-many/.test(c)?"嘗試次數過多，請稍後再試":"發生錯誤："+c;}
+  function authMsg(e){var c=(e&&e.code)||"";return /invalid-credential|wrong-password|user-not-found/.test(c)?"Email 或密碼不正確":/email-already/.test(c)?"這個 Email 已註冊過，請直接登入":/weak-password/.test(c)?"密碼至少要 6 碼":/invalid-email/.test(c)?"Email 格式不正確":/network/.test(c)?"網路連線失敗":/popup/.test(c)?"Google 登入視窗被擋住或關閉了，請允許彈出視窗後再試":/unauthorized-domain/.test(c)?"此網址尚未加入 Firebase 的授權網域":/operation-not-allowed/.test(c)?"尚未在 Firebase 啟用這個登入方式":/too-many/.test(c)?"嘗試次數過多，請稍後再試":"發生錯誤："+c;}
   function authDo(k){
     if(!window.Cloud){aerr("雲端尚未載入，請檢查網路後重新整理。");return;}
     var e=$("em").value.trim(),p=$("pw").value;
@@ -335,6 +336,7 @@ window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDom
     window.Cloud[k](e,p).then(function(){aerr("");}).catch(function(x){aerr(authMsg(x));});
   }
   $("login").onclick=function(){authDo("signIn")};
+  $("google").onclick=function(){if(!window.Cloud){aerr("雲端尚未載入，請檢查網路後重新整理。");return;}aerr("處理中…");window.Cloud.google().then(function(){aerr("");}).catch(function(x){aerr(authMsg(x));});};
   $("signup").onclick=function(){authDo("signUp")};
   $("forgot").onclick=function(){var e=$("em").value.trim();if(!e){aerr("請先輸入 Email");return;}if(!window.Cloud)return;window.Cloud.reset(e).then(function(){aerr("已寄出重設密碼信，請查收。");}).catch(function(x){aerr(authMsg(x));});};
   $("skip").onclick=function(){$("auth").hidden=true;};
@@ -382,6 +384,7 @@ window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDom
       signUp:function(e,p){return Au.createUserWithEmailAndPassword(auth,e,p);},
       reset:function(e){return Au.sendPasswordResetEmail(auth,e);},
       logout:function(){return Au.signOut(auth);},
+      google:function(){return Au.signInWithPopup(auth,new Au.GoogleAuthProvider());},
       putMany:function(l){return batches(l,function(b,r){b.set(ref(r.id),body(r));});},
       delMany:function(l){return batches(l,function(b,id){b.delete(ref(id));});}
     };
