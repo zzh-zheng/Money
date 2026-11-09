@@ -60,6 +60,18 @@ h2{font-size:16px;margin:28px 0 10px}
 .empty{text-align:center;color:var(--mute);padding:28px 8px;border:1px dashed var(--line);border-radius:12px}
 .tools{display:flex;gap:8px;margin-top:24px}
 .tools+.tools{margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;cursor:pointer;display:grid;text-align:left;min-height:44px}
+.chip small{color:var(--mute);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--accink)}
+.chip[aria-pressed="true"] small{color:var(--accink)}
+.dcard{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.dtot{font-size:34px;font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums}
+.dmeta{font-size:14px;color:var(--mute)}
+.dcard h3{font-size:14px;margin:14px 0 4px}
+.pr{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.pr small{color:var(--mute)}
+.hint{color:var(--mute);font-size:14px;margin:10px 0 0}
 .acct{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--mute)}
 .acct button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 10px;cursor:pointer;min-height:32px}
 #auth{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow:auto}
@@ -109,11 +121,16 @@ h2{font-size:16px;margin:28px 0 10px}
     <button class="cancel" id="cancel" hidden>取消修改</button>
   </div>
 
-  <h2>支出分類</h2>
-  <div class="cats" id="cats"></div>
+  <h2>分類統計</h2>
+  <div class="seg" role="group" aria-label="統計類型">
+    <button id="sExp" aria-pressed="true">支出</button>
+    <button id="sInc" aria-pressed="false">收入</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="detail"></div>
 
-  <h2>付款方式</h2>
-  <div class="cats" id="pays"></div>
+  <h2>本月支出付款方式</h2>
+  <div id="pays"></div>
 
   <h2>明細</h2>
   <div id="list"></div>
@@ -170,6 +187,7 @@ window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDom
   var $=function(id){return document.getElementById(id)};
   var type="exp";
   var editId=null;
+  var stype="exp",selCat=null;
   var today=new Date();
   var cur={y:today.getFullYear(),m:today.getMonth()};
   function iso(d){var p=function(n){return String(n).padStart(2,"0")};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
@@ -205,14 +223,9 @@ window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDom
     $("bi").style.width=tot?(inc/tot*100)+"%":"0";
     $("be").style.width=tot?(exp/tot*100)+"%":"0";
 
-    var ck=Object.keys(by).sort(function(a,b){return by[b]-by[a]});
-    $("cats").innerHTML=ck.length?ck.map(function(k){
-      return '<div class="cat"><span>'+esc(k)+'</span><div class="t"><i style="width:'+(by[k]/exp*100)+'%"></i></div><b>$'+fmt(by[k])+'</b></div>';
-    }).join(""):'<div class="empty">本月還沒有支出</div>';
+    renderStats(ms);
     var pks=Object.keys(pb).sort(function(a,b){return pb[b]-pb[a]});
-    $("pays").innerHTML=pks.length?pks.map(function(k){
-      return '<div class="cat"><span>'+esc(k)+'</span><div class="t"><i style="width:'+(pb[k]/exp*100)+'%"></i></div><b>$'+fmt(pb[k])+'</b></div>';
-    }).join(""):'<div class="empty">本月還沒有支出</div>';
+    $("pays").innerHTML=pks.length?pks.map(function(k){return '<div class="pr"><span>'+esc(k)+'</span><b>$'+fmt(pb[k])+' · '+Math.round(pb[k]/exp*100)+'%</b></div>'}).join(""):'<div class="empty">本月還沒有支出</div>';
 
     if(!ms.length){$("list").innerHTML='<div class="empty">本月還沒有紀錄。在上方輸入金額，按「新增一筆」。</div>';return;}
     var html="",last="";
@@ -316,6 +329,30 @@ window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDom
     };
     r.readAsText(f);
   };
+  function setS(t){stype=t;selCat=null;$("sExp").setAttribute("aria-pressed",t==="exp");$("sInc").setAttribute("aria-pressed",t==="inc");render();}
+  $("sExp").onclick=function(){setS("exp")};
+  $("sInc").onclick=function(){setS("inc")};
+  $("chips").onclick=function(e){var b=e.target.closest("button");if(!b)return;var c=b.getAttribute("data-cat");selCat=selCat===c?null:c;render();};
+  function renderStats(ms){
+    var w=stype==="exp"?"支出":"收入";
+    var list=ms.filter(function(i){return i.type===stype});
+    var sum=function(a){return a.reduce(function(s,i){return s+i.amount},0)};
+    var tot=sum(list),by={};
+    list.forEach(function(i){(by[i.cat]=by[i.cat]||[]).push(i)});
+    var ks=Object.keys(by).sort(function(a,b){return sum(by[b])-sum(by[a])});
+    if(!ks.length){$("chips").innerHTML='<div class="empty" style="width:100%">本月還沒有'+w+'</div>';$("detail").innerHTML="";return;}
+    if(selCat&&!by[selCat])selCat=null;
+    $("chips").innerHTML=ks.map(function(k){return '<button class="chip" data-cat="'+esc(k)+'" aria-pressed="'+(k===selCat)+'">'+esc(k)+'<small>$'+fmt(sum(by[k]))+'</small></button>'}).join("");
+    if(!selCat){$("detail").innerHTML='<p class="hint">點上方的分類，查看這個分類的總'+w+'與付款方式分布。</p>';return;}
+    var l=by[selCat],t=sum(l),pm={};
+    l.forEach(function(i){var p=i.pay||"未標示";pm[p]=pm[p]||{n:0,s:0};pm[p].n++;pm[p].s+=i.amount;});
+    var pk=Object.keys(pm).sort(function(a,b){return pm[b].s-pm[a].s});
+    var mx=l.reduce(function(m,i){return i.amount>m.amount?i:m},l[0]);
+    $("detail").innerHTML='<div class="dcard"><small>'+esc(selCat)+' · 本月'+w+'</small><div class="dtot '+stype+'">$'+fmt(t)+'</div>'
+      +'<div class="dmeta">共 '+l.length+' 筆 · 平均 $'+fmt(t/l.length)+' · 佔本月'+w+' '+Math.round(t/tot*100)+'%</div>'
+      +'<div class="dmeta">最高一筆 $'+fmt(mx.amount)+'（'+mx.date.slice(5).replace("-","/")+(mx.note?"・"+esc(mx.note):"")+'）</div>'
+      +'<h3>付款方式分布</h3>'+pk.map(function(k){return '<div class="pr"><span>'+esc(k)+' <small>'+pm[k].n+' 筆</small></span><b>$'+fmt(pm[k].s)+' · '+Math.round(pm[k].s/t*100)+'%</b></div>'}).join("")+'</div>';
+  }
   var revealed=false;
   function reveal(){revealed=true;document.querySelector("main").style.visibility="";}
   function acctUI(){
