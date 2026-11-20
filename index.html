@@ -1,592 +1,465 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>記帳本</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>網購記錄</title>
 <style>
-:root{--bg:#eef2f1;--card:#fff;--ink:#17302b;--mute:#6b7f7a;--line:#d9e2df;--inc:#1f8a70;--exp:#d1495b;--acc:#f2b134;--accink:#3a2a00;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1c19;--card:#182b27;--ink:#e6f1ee;--mute:#8da39d;--line:#2a403b;--inc:#4cc3a3;--exp:#ff7a8a;--acc:#f2b134;--accink:#3a2a00;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0f1c19;--card:#182b27;--ink:#e6f1ee;--mute:#8da39d;--line:#2a403b;--inc:#4cc3a3;--exp:#ff7a8a;--acc:#f2b134;--accink:#3a2a00;color-scheme:dark}
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --ink:#17212B; --muted:#5F6B78; --line:#D5DBE2;
+  --kraft:#B98B52; --ok:#2F7D5B; --bad:#C4423A; --accent:#1F4E79; --accent-ink:#FFFFFF;
+  --chip-ok:#DDF0E6; --chip-bad:#F8E1DF; --chip-wait:#F3E8D6;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#10161C; --surface:#18212A; --ink:#E8EDF2; --muted:#9AA7B4; --line:#2B3744;
+    --kraft:#D2A56B; --ok:#5CC49A; --bad:#EE7A72; --accent:#6FA8DC; --accent-ink:#0E1620;
+    --chip-ok:#1C3A2E; --chip-bad:#44211F; --chip-wait:#3A2F1D;
+  }
+}
 *{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.6}
-main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
-button,input,select{font:inherit;color:inherit}
-:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-h1{font-size:20px;margin:0;font-weight:700}
-.month{display:flex;align-items:center;gap:4px}
-.month button{width:36px;height:36px;border:1px solid var(--line);background:var(--card);border-radius:10px;cursor:pointer}
-.month span{min-width:96px;text-align:center;font-weight:500}
-.hero{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
-.hero small{color:var(--mute)}
-.bal{font-size:clamp(40px,12vw,60px);font-weight:900;line-height:1.1;letter-spacing:-1px;margin:2px 0 14px;font-variant-numeric:tabular-nums}
-.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
-.bar i{display:block;transition:width .4s}
-.bar .bi{background:var(--inc)}.bar .be{background:var(--exp)}
-.sum{display:flex;justify-content:space-between;margin-top:10px;font-size:15px}
-.sum b{font-variant-numeric:tabular-nums}
-.inc{color:var(--inc)}.exp{color:var(--exp)}
-.form{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:10px;padding:3px}
-.seg button{border:0;background:none;padding:8px;border-radius:8px;cursor:pointer;font-weight:500;color:var(--mute)}
-.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-label{display:grid;gap:3px;font-size:13px;color:var(--mute)}
-input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:44px}
-.add{border:0;background:var(--acc);color:var(--accink);font-weight:700;padding:12px;border-radius:10px;cursor:pointer;min-height:46px}
-.err{color:var(--exp);font-size:13px;min-height:1em;margin:0}
-h2{font-size:16px;margin:28px 0 10px}
-.cats{display:grid;gap:8px}
-.cat{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;font-size:14px}
-.cat .t{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
-.cat .t i{display:block;height:100%;background:var(--exp);border-radius:5px}
-.day{margin-top:14px;color:var(--mute);font-size:13px;display:flex;justify-content:space-between}
-.item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px}
-.item .m{flex:1;min-width:0}
-.item .m b{display:block;font-weight:500}
-.item .m span{font-size:13px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
-.item .a{font-weight:700;font-variant-numeric:tabular-nums}
-.item button{border:0;background:none;color:var(--mute);cursor:pointer;width:36px;height:36px;border-radius:8px;font-size:18px}
-.item button:hover{color:var(--exp)}
-.item button[data-edit]:hover{color:var(--ink)}
-.item.edit{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
-.cancel{border:1px solid var(--line);background:none;padding:10px;border-radius:10px;cursor:pointer;min-height:44px;color:var(--mute)}
-[hidden]{display:none!important}
-.empty{text-align:center;color:var(--mute);padding:28px 8px;border:1px dashed var(--line);border-radius:12px}
-.tools{display:flex;gap:8px;margin-top:24px}
-.tools+.tools{margin-top:8px}
-.drow{display:flex;gap:12px;align-items:flex-start}
-.dl{flex:0 0 auto;max-width:48%}
-.dr{flex:1;min-width:0;text-align:right;font-size:12px;color:var(--mute);display:grid;gap:3px;word-break:break-all}
-.pie{display:flex;gap:14px;align-items:center;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-.pc{width:120px;height:120px;border-radius:50%;flex:0 0 auto;background:var(--line)}
-.legend{flex:1;min-width:0;font-size:12px;color:var(--mute);display:grid;gap:5px}
-.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
-.tabs{margin-top:12px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.chip{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;cursor:pointer;display:grid;text-align:left;min-height:44px}
-.chip small{color:var(--mute);font-variant-numeric:tabular-nums}
-.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--accink)}
-.chip[aria-pressed="true"] small{color:var(--accink)}
-.dcard{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
-.dtot{font-size:34px;font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums}
-.dmeta{font-size:14px;color:var(--mute)}
-.dcard h3{font-size:14px;margin:14px 0 4px}
-.pr{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.pr small{color:var(--mute)}
-.hint{color:var(--mute);font-size:14px;margin:10px 0 0}
-.acct{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--mute)}
-.acct button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 10px;cursor:pointer;min-height:32px}
-#auth{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow:auto}
-#auth .box{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:10px}
-#auth h2{margin:0}
-.lnk{border:0;background:none;color:var(--mute);text-decoration:underline;cursor:pointer;padding:6px}
-.tools button{flex:1;border:1px solid var(--line);background:var(--card);padding:10px;border-radius:10px;cursor:pointer;min-height:44px}
+html{scroll-padding-top:12px}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  line-height:1.55;padding:16px 14px 60px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:1.5rem;margin:4px 0 14px;letter-spacing:.02em}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.sum div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sum small{display:block;color:var(--muted);font-size:.78rem}
+.sum b{font-size:1.15rem;font-variant-numeric:tabular-nums}
+.sum .warn b{color:var(--bad)}
+form,.item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;border-top:4px solid var(--kraft)}
+form .full{grid-column:1/-1}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:3px}
+input[type=text],input[type=number],input[type=date],select{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;
+  background:var(--bg);color:var(--ink);font:inherit;font-size:1rem}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.check{display:flex;align-items:center;gap:8px;font-size:1rem;color:var(--ink);margin:0;padding-top:22px}
+.check input{width:20px;height:20px}
+button{font:inherit;cursor:pointer;border-radius:7px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);padding:8px 12px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.danger{color:var(--bad)}
+.actions{display:flex;gap:8px}
+.actions .primary{flex:1}
+.tabs{display:flex;gap:6px;margin:6px 0 10px;flex-wrap:wrap}
+.tabs button{padding:6px 12px;font-size:.9rem}
+.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.item{margin-bottom:10px}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.name{font-weight:600;word-break:break-all}
+.name a{color:var(--accent)}
+.price{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;font-size:.82rem}
+.chip{padding:2px 9px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.chip.ok{background:var(--chip-ok);border-color:transparent;color:var(--ok)}
+.chip.bad{background:var(--chip-bad);border-color:transparent;color:var(--bad)}
+.chip.wait{background:var(--chip-wait);border-color:transparent;color:var(--kraft)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row button{padding:5px 10px;font-size:.85rem}
+.empty{text-align:center;color:var(--muted);padding:30px 10px;border:1px dashed var(--line);border-radius:10px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.tools button{font-size:.85rem}
+.note{color:var(--muted);font-size:.78rem;margin-top:8px}
+.syncbar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:.85rem}
+.s-ok{color:var(--ok)}.s-bad{color:var(--bad)}
+input[type=password],textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;
+  background:var(--bg);color:var(--ink);font:inherit;font-size:1rem}
+textarea{font-size:.85rem;margin:6px 0 10px}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:min(92vw,420px);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog input{margin-bottom:8px}
+dialog .row{margin-top:8px}
+@media (max-width:480px){form{grid-template-columns:1fr}.sum b{font-size:1rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-  <div class="top">
-    <h1>記帳本</h1>
-    <div class="month">
-      <button id="prev" aria-label="上個月">‹</button>
-      <span id="mlabel"></span>
-      <button id="next" aria-label="下個月">›</button>
-    </div>
+<div class="wrap">
+  <h1>網購記錄</h1>
+  <div class="syncbar"><span id="syncTxt">只存在這支瀏覽器</span><button id="syncBtn" type="button">雲端同步</button></div>
+
+  <div class="sum">
+    <div><small>總金額</small><b id="sTotal">0</b></div>
+    <div class="warn"><small>未付款金額</small><b id="sUnpaid">0</b></div>
+    <div><small>還沒到貨</small><b id="sWait">0 件</b></div>
   </div>
 
-  <div class="acct" id="acct" hidden><span id="who"></span><button id="acctbtn"></button></div>
-
-  <div class="seg tabs" role="group" aria-label="頁面">
-    <button id="tabMain" aria-pressed="true">記帳</button>
-    <button id="tabFixed" aria-pressed="false">固定收支</button>
-  </div>
-  <div id="pgMain">
-
-  <section class="hero" aria-live="polite">
-    <small>本月結餘</small>
-    <div class="bal" id="bal">0</div>
-    <div class="bar"><i class="bi" id="bi" style="width:0"></i><i class="be" id="be" style="width:0"></i></div>
-    <div class="sum"><span>收入 <b class="inc" id="sin">0</b></span><span>支出 <b class="exp" id="sex">0</b></span></div>
-  </section>
-
-  <div class="form">
-    <div class="seg" role="group" aria-label="類型">
-      <button id="tExp" aria-pressed="true">支出</button>
-      <button id="tInc" aria-pressed="false">收入</button>
+  <form id="f">
+    <div class="full">
+      <label for="name">商品名稱或網址</label>
+      <input type="text" id="name" required placeholder="例：藍牙耳機 或 https://…">
     </div>
-    <div class="row">
-      <label>金額<input id="amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
-      <label>日期<input id="date" type="date"></label>
+    <div>
+      <label for="amount">總金額</label>
+      <input type="number" id="amount" required min="0" step="1" inputmode="numeric" placeholder="0">
     </div>
-    <div class="row">
-      <label>分類<select id="cat"></select></label>
-      <label>付款方式<select id="pay"></select></label>
+    <div>
+      <label for="pay">付款方式</label>
+      <select id="pay">
+        <option>信用卡</option><option>LINE Pay</option><option>街口支付</option>
+        <option>iPASS MONEY</option><option>轉帳</option><option>貨到付款</option>
+        <option>超商取貨付款</option><option>其他</option>
+      </select>
     </div>
-    <label>備註<input id="note" type="text" maxlength="40" placeholder="例如：午餐便當"></label>
-    <p class="err" id="err"></p>
-    <button class="add" id="add">新增一筆</button>
-    <button class="cancel" id="cancel" hidden>取消修改</button>
+    <div>
+      <label for="od">下單日</label>
+      <input type="date" id="od" required>
+    </div>
+    <div>
+      <label for="ad">到貨日（還沒到可留空）</label>
+      <input type="date" id="ad">
+    </div>
+    <label class="check full"><input type="checkbox" id="paid"> 已付款</label>
+    <div class="actions full">
+      <button type="submit" class="primary" id="saveBtn">新增</button>
+      <button type="button" id="cancelBtn" hidden>取消編輯</button>
+    </div>
+  </form>
+
+  <div class="tabs" id="tabs">
+    <button data-f="all" aria-pressed="true">全部</button>
+    <button data-f="unpaid" aria-pressed="false">未付款</button>
+    <button data-f="wait" aria-pressed="false">未到貨</button>
+    <button data-f="done" aria-pressed="false">已完成</button>
   </div>
 
-  <h2>分類統計</h2>
-  <div class="seg" role="group" aria-label="統計類型">
-    <button id="sExp" aria-pressed="true">支出</button>
-    <button id="sInc" aria-pressed="false">收入</button>
-  </div>
-  <div class="chips" id="chips"></div>
-  <div id="detail"></div>
-
-  <h2>本月支出付款方式</h2>
-  <div class="pie"><div class="pc" id="pieC" role="img" aria-label="本月支出付款方式圓餅圖"></div><div class="legend" id="pays"></div></div>
-
-  <h2>明細</h2>
   <div id="list"></div>
 
-  <h2>資料備份</h2>
   <div class="tools">
-    <button id="csvM">匯出本月 CSV</button>
-    <button id="csvA">匯出全部 CSV</button>
+    <button id="expCsv">匯出 CSV</button>
+    <button id="expJson">備份 JSON</button>
+    <button id="impBtn">匯入備份</button>
+    <input type="file" id="impFile" accept=".json,application/json" hidden>
   </div>
-  <div class="tools">
-    <button id="bak">備份（JSON）</button>
-    <button id="imp">匯入備份</button>
+  <p class="note">資料會先存在這支瀏覽器；登入雲端後會在各裝置同步，仍建議偶爾備份。</p>
+</div>
+
+<dialog id="dlg">
+  <div id="vCfg">
+    <b>貼上 Firebase 設定</b>
+    <p class="note">Firebase 主控台 → 專案設定 → 你的應用程式（網頁）→ 複製 firebaseConfig 整段貼上。</p>
+    <textarea id="cfgTxt" rows="7" placeholder='{ apiKey: "…", authDomain: "…", projectId: "…", appId: "…" }'></textarea>
+    <div class="row"><button class="primary" id="cfgSave">儲存設定</button><button class="dclose">關閉</button></div>
   </div>
-  <input type="file" id="file" accept=".json,application/json" style="position:absolute;left:-9999px" tabindex="-1" aria-hidden="true">
-  <p class="err" id="msg" style="color:var(--mute)" aria-live="polite"></p>
-  <div class="tools">
-    <button id="clear">清除本月資料</button>
+  <div id="vAuth" hidden>
+    <b>登入雲端帳號</b>
+    <label for="em">Email</label>
+    <input type="text" id="em" inputmode="email" autocomplete="username">
+    <label for="pw">密碼（至少 6 碼）</label>
+    <input type="password" id="pw" autocomplete="current-password">
+    <p class="note s-bad" id="dErr"></p>
+    <div class="row"><button class="primary" id="doLogin">登入</button><button id="doReg">註冊新帳號</button><button class="dclose">關閉</button></div>
+    <p class="note"><a href="#" id="chgCfg">更換 Firebase 設定</a></p>
   </div>
+  <div id="vAcc" hidden>
+    <b>已登入雲端</b>
+    <p id="accMail"></p>
+    <div class="row"><button id="doOut">登出</button><button class="dclose">關閉</button></div>
   </div>
+</dialog>
 
-  <div id="pgFixed" hidden>
-    <section class="hero">
-      <small>每月固定淨額</small>
-      <div class="bal" id="fnet">0</div>
-      <div class="sum"><span>固定收入 <b class="inc" id="fin">0</b></span><span>固定支出 <b class="exp" id="fex">0</b></span></div>
-    </section>
-    <div class="form">
-      <div class="seg" role="group" aria-label="固定類型">
-        <button id="fExp" aria-pressed="true">固定支出</button>
-        <button id="fInc" aria-pressed="false">固定收入</button>
-      </div>
-      <div class="row">
-        <label>名稱<input id="fName" type="text" maxlength="30" placeholder="例如：房租"></label>
-        <label>金額<input id="fAmt" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
-      </div>
-      <div class="row">
-        <label>分類<select id="fCat"></select></label>
-        <label>付款方式<select id="fPay"></select></label>
-      </div>
-      <label>每月幾號<input id="fDay" type="number" inputmode="numeric" min="1" max="31" placeholder="1–31"></label>
-      <p class="err" id="fErr"></p>
-      <button class="add" id="fAdd">新增固定項目</button>
-      <button class="cancel" id="fCancel" hidden>取消修改</button>
-    </div>
-    <h2>固定項目</h2>
-    <div id="flist"></div>
-    <p class="hint">每月到了指定的日期，會自動在「記帳」新增一筆。這個月已經過了的日期，新增時會立刻補記本月；沒有那一天的月份（例如 31 號）會記在月底。</p>
-  </div>
-</main>
-
-<div id="auth" hidden><div class="box">
-  <h2>登入雲端記帳本</h2>
-  <label>Email<input id="em" type="email" autocomplete="username"></label>
-  <label>密碼（至少 6 碼）<input id="pw" type="password" autocomplete="current-password"></label>
-  <p class="err" id="aerr"></p>
-  <button class="add" id="login">登入</button>
-  <button class="cancel" id="google">用 Google 登入</button>
-  <button class="cancel" id="signup">註冊新帳號</button>
-  <button class="lnk" id="forgot">忘記密碼</button>
-  <button class="lnk" id="skip">先不登入（只存在這支手機）</button>
-</div></div>
-
-<script>
-/* Firebase 設定 */
-window.FIREBASE_CONFIG={apiKey:"AIzaSyA-VwJz3D2cOn7bU3pXiwgENG1A9fvn7jY",authDomain:"bookkeeping-e59de.firebaseapp.com",projectId:"bookkeeping-e59de",storageBucket:"bookkeeping-e59de.firebasestorage.app",messagingSenderId:"255652469619",appId:"1:255652469619:web:62cff2c25c656472e34306"};
-</script>
-<script>
-(function(){
-  var EXP=["飲食","交通","購物","化妝品/保養品","娛樂","居住","醫療","學習","其他"];
-  var INC=["薪資","獎金","零用錢","投資","化妝品/保養品","其他"];
-  var PAY=["現金","LINE Pay","街口支付","iPASS MONEY","信用卡","悠遊卡","轉帳","其他"];
-  var KEY="expense-tracker-v1";
-  var cfg=window.FIREBASE_CONFIG||{};
-  var cloudConfigured=!!cfg.apiKey&&cfg.apiKey.indexOf("YOUR_")!==0;
-  var cloud={on:false,user:null,st:""};
-  function readLocal(){var raw=null,a=[];try{raw=localStorage.getItem(KEY);if(raw)a=JSON.parse(raw)||[];}catch(e){try{localStorage.setItem(KEY+"-corrupt",raw);}catch(_){}a=[];}return Array.isArray(a)?a:[];}
-  var items=readLocal();
-  function validRec(i){return i&&i.id&&typeof i.date==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(i.date)&&i.amount>0&&(i.type==="inc"||i.type==="exp");}
-  function cput(l){if(cloud.on&&window.Cloud&&l.length)window.Cloud.putMany(l).catch(function(){});}
-  var FK=KEY+"-fixed";
-  var fixed=[],gotI=false,gotF=false;
-  function readFixed(){try{var a=JSON.parse(localStorage.getItem(FK)||"[]");return Array.isArray(a)?a:[];}catch(e){return [];}}
-  fixed=readFixed();
-  function saveFixed(){if(cloud.on)return;try{localStorage.setItem(FK,JSON.stringify(fixed));}catch(e){}}
-  function fput(l){if(cloud.on&&window.Cloud&&l.length)window.Cloud.putFixed(l).catch(function(){});}
-  function fdel(l){if(cloud.on&&window.Cloud&&l.length)window.Cloud.delFixed(l).catch(function(){});}
-  function cdel(l){if(cloud.on&&window.Cloud&&l.length)window.Cloud.delMany(l).catch(function(){});}
-  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
-  function save(){if(cloud.on)return;try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){msg("無法儲存資料，請確認沒有使用私密瀏覽。");}}
-
-  var $=function(id){return document.getElementById(id)};
-  var type="exp";
-  var editId=null;
-  var stype="exp",selSet={},selPay={};
-  var today=new Date();
-  var cur={y:today.getFullYear(),m:today.getMonth()};
-  function iso(d){var p=function(n){return String(n).padStart(2,"0")};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
-  $("date").value=iso(today);
-  var fmt=function(n){return Math.round(n).toLocaleString("zh-TW")};
-  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]});}
-
-  function fillCats(){
-    var list=type==="exp"?EXP:INC;
-    $("cat").innerHTML=list.map(function(c){return "<option>"+c+"</option>"}).join("");
-  }
-  function setType(t){
-    type=t;
-    $("tExp").setAttribute("aria-pressed",t==="exp");
-    $("tInc").setAttribute("aria-pressed",t==="inc");
-    fillCats();
-  }
-  $("tExp").onclick=function(){setType("exp")};
-  $("tInc").onclick=function(){setType("inc")};
-
-  function inMonth(it){var p=it.date.split("-");return +p[0]===cur.y&&+p[1]-1===cur.m;}
-
-  function render(){
-    $("mlabel").textContent=cur.y+" 年 "+(cur.m+1)+" 月";
-    var ms=items.filter(inMonth).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(String(b.id)<String(a.id)?-1:1);});
-    var inc=0,exp=0,by={},pb={};
-    ms.forEach(function(i){if(i.type==="inc")inc+=i.amount;else{exp+=i.amount;by[i.cat]=(by[i.cat]||0)+i.amount;var pk=i.pay||"未標示";pb[pk]=(pb[pk]||0)+i.amount;}});
-    var bal=inc-exp;
-    $("bal").textContent=(bal<0?"-":"")+"$"+fmt(Math.abs(bal));
-    $("sin").textContent="$"+fmt(inc);
-    $("sex").textContent="$"+fmt(exp);
-    var tot=inc+exp;
-    $("bi").style.width=tot?(inc/tot*100)+"%":"0";
-    $("be").style.width=tot?(exp/tot*100)+"%":"0";
-
-    renderStats(ms);
-    var COL=["#1f8a70","#f2b134","#d1495b","#4b7bec","#a55eea","#fd9644","#26de81","#778ca3","#e84393"];
-    var pks=Object.keys(pb).sort(function(a,b){return pb[b]-pb[a]});
-    if(!pks.length){$("pieC").style.background="";$("pays").innerHTML='<div>本月還沒有支出</div>';}
-    else{
-      var acc=0,sg=[];
-      pks.forEach(function(k,ix){var p=pb[k]/exp*100;sg.push(COL[ix%COL.length]+" "+acc+"% "+(acc+p)+"%");acc+=p;});
-      $("pieC").style.background="conic-gradient("+sg.join(",")+")";
-      $("pays").innerHTML=pks.map(function(k,ix){return '<div><i style="background:'+COL[ix%COL.length]+'"></i>'+esc(k)+' '+Math.round(pb[k]/exp*100)+'% · $'+fmt(pb[k])+'</div>'}).join("");
-    }
-
-    if(!ms.length){$("list").innerHTML='<div class="empty">本月還沒有紀錄。在上方輸入金額，按「新增一筆」。</div>';return;}
-    var html="",last="";
-    ms.forEach(function(i){
-      if(i.date!==last){
-        last=i.date;
-        var d=new Date(i.date+"T00:00:00");
-        var dt=ms.filter(function(x){return x.date===i.date}).reduce(function(s,x){return s+(x.type==="inc"?x.amount:-x.amount)},0);
-        html+='<div class="day"><span>'+(d.getMonth()+1)+"/"+d.getDate()+"（"+"日一二三四五六".charAt(d.getDay())+"）</span><span>"+(dt<0?"-":"")+"$"+fmt(Math.abs(dt))+"</span></div>";
-      }
-      html+='<div class="item'+(i.id===editId?" edit":"")+'"><div class="m"><b>'+esc(i.cat)+'</b>'+((i.pay||i.note)?'<span>'+esc([i.pay,i.note].filter(Boolean).join(" · "))+'</span>':"")+'</div>'
-        +'<div class="a '+(i.type==="inc"?"inc":"exp")+'">'+(i.type==="inc"?"+":"-")+"$"+fmt(i.amount)+'</div>'
-        +'<button data-edit="'+i.id+'" aria-label="修改這一筆">✎</button><button data-del="'+i.id+'" aria-label="刪除這一筆">✕</button></div>';
-    });
-    $("list").innerHTML=html;
-  }
-
-  $("add").onclick=function(){
-    var a=parseFloat($("amt").value);
-    if(!(a>0)){$("err").textContent="請輸入大於 0 的金額。";$("amt").focus();return;}
-    if(!$("date").value){$("err").textContent="請選擇日期。";return;}
-    $("err").textContent="";
-    var rec={id:editId||Date.now(),type:type,amount:a,cat:$("cat").value,pay:$("pay").value,date:$("date").value,note:$("note").value.trim()};
-    if(editId){items=items.map(function(i){return i.id===editId?rec:i});}else{items.push(rec);}
-    save();cput([rec]);
-    var p=$("date").value.split("-");cur={y:+p[0],m:+p[1]-1};
-    $("amt").value="";$("note").value="";
-    stopEdit();
-    render();
-  };
-  $("amt").addEventListener("keydown",function(e){if(e.key==="Enter")$("add").click();});
-  $("note").addEventListener("keydown",function(e){if(e.key==="Enter")$("add").click();});
-
-  function startEdit(id){
-    var it=items.filter(function(i){return String(i.id)===id})[0];
-    if(!it)return;
-    editId=it.id;
-    setType(it.type);
-    $("cat").value=it.cat;$("amt").value=it.amount;$("date").value=it.date;$("note").value=it.note||"";
-    if(it.pay)$("pay").value=it.pay;
-    $("add").textContent="儲存修改";$("cancel").hidden=false;$("err").textContent="";
-    render();
-    $("amt").scrollIntoView({behavior:"smooth",block:"center"});$("amt").focus();
-  }
-  function stopEdit(){editId=null;$("add").textContent="新增一筆";$("cancel").hidden=true;}
-  $("cancel").onclick=function(){stopEdit();$("amt").value="";$("note").value="";$("err").textContent="";render();};
-  $("list").onclick=function(e){
-    var t=e.target;if(!t.getAttribute)return;
-    var ed=t.getAttribute("data-edit");
-    if(ed){startEdit(ed);return;}
-    var id=t.getAttribute("data-del");
-    if(!id)return;
-    if(String(editId)===id){stopEdit();$("amt").value="";$("note").value="";}
-    items=items.filter(function(i){return String(i.id)!==id});
-    save();cdel([id]);render();
-  };
-  $("prev").onclick=function(){cur.m--;if(cur.m<0){cur.m=11;cur.y--;}render();};
-  $("next").onclick=function(){cur.m++;if(cur.m>11){cur.m=0;cur.y++;}render();};
-
-  var armed=false;
-  $("clear").onclick=function(){
-    if(!armed){armed=true;$("clear").textContent="再按一次確認清除";setTimeout(function(){armed=false;$("clear").textContent="清除本月資料";},3000);return;}
-    var gone=items.filter(inMonth).map(function(i){return i.id});
-    items=items.filter(function(i){return !inMonth(i)});
-    stopEdit();save();cdel(gone);armed=false;$("clear").textContent="清除本月資料";render();
-  };
-
-  function msg(t){$("msg").textContent=t;}
-  function dl(name,text,mime){
-    try{var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:mime}));a.download=name;document.body.appendChild(a);a.click();a.remove();msg("已匯出："+name);}
-    catch(e){msg("匯出失敗，請換瀏覽器試試。");}
-  }
-  function csvOf(list){
-    var sorted=list.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(String(a.id)<String(b.id)?-1:1)});
-    var rows=[["日期","類型","分類","付款方式","金額","備註"]].concat(sorted.map(function(i){return [i.date,i.type==="inc"?"收入":"支出",i.cat,i.pay||"",i.amount,i.note||""]}));
-    return "\ufeff"+rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"'}).join(",")}).join("\r\n");
-  }
-  $("csvM").onclick=function(){var l=items.filter(inMonth);if(!l.length){msg("本月沒有資料可匯出。");return;}dl("記帳_"+cur.y+"-"+String(cur.m+1).padStart(2,"0")+".csv",csvOf(l),"text/csv;charset=utf-8");};
-  $("csvA").onclick=function(){if(!items.length){msg("目前沒有資料可匯出。");return;}dl("記帳_全部.csv",csvOf(items),"text/csv;charset=utf-8");};
-  $("bak").onclick=function(){dl("記帳備份_"+iso(new Date())+".json",JSON.stringify({app:"expense-tracker",v:1,items:items}),"application/json");};
-  $("imp").onclick=function(){$("file").click();};
-  $("file").onchange=function(){
-    var f=this.files&&this.files[0];if(!f)return;
-    var r=new FileReader();
-    r.onload=function(){
-      try{
-        var d=JSON.parse(r.result);var arr=Array.isArray(d)?d:d.items;
-        if(!Array.isArray(arr))throw new Error("bad");
-        var have={};items.forEach(function(i){have[i.id]=1});
-        var n=0,added=[];
-        arr.forEach(function(i){
-          if(!i||typeof i.date!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(i.date)||!(i.amount>0)||(i.type!=="inc"&&i.type!=="exp"))return;
-          var id=i.id||(Date.now()*1000+n);
-          if(have[id])return;
-          have[id]=1;n++;
-          var nr={id:id,type:i.type,amount:+i.amount,cat:String(i.cat||"其他"),pay:i.pay?String(i.pay):"",date:i.date,note:i.note?String(i.note):""};items.push(nr);added.push(nr);
-        });
-        save();cput(added);render();msg("已匯入 "+n+" 筆（重複的不會再加）。");
-      }catch(e){msg("檔案格式不正確。");}
-      $("file").value="";
-    };
-    r.readAsText(f);
-  };
-  function setS(t){stype=t;selSet={};$("sExp").setAttribute("aria-pressed",t==="exp");$("sInc").setAttribute("aria-pressed",t==="inc");render();}
-  $("sExp").onclick=function(){setS("exp")};
-  $("sInc").onclick=function(){setS("inc")};
-  $("chips").onclick=function(e){var b=e.target.closest("button");if(!b)return;var c=b.getAttribute("data-cat");if(selSet[c])delete selSet[c];else selSet[c]=1;render();};
-  function renderStats(ms){
-    var w=stype==="exp"?"支出":"收入";
-    var list=ms.filter(function(i){return i.type===stype});
-    var sum=function(a){return a.reduce(function(s,i){return s+i.amount},0)};
-    var tot=sum(list),by={};
-    list.forEach(function(i){(by[i.cat]=by[i.cat]||[]).push(i)});
-    var ks=Object.keys(by).sort(function(a,b){return sum(by[b])-sum(by[a])});
-    if(!ks.length){$("chips").innerHTML='<div class="empty" style="width:100%">本月還沒有'+w+'</div>';$("detail").innerHTML="";return;}
-    Object.keys(selSet).forEach(function(k){if(!by[k])delete selSet[k];});
-    $("chips").innerHTML=ks.map(function(k){return '<button class="chip" data-cat="'+esc(k)+'" aria-pressed="'+(!!selSet[k])+'">'+esc(k)+'</button>'}).join("");
-    var sel=ks.filter(function(k){return selSet[k]});
-    if(!sel.length){$("detail").innerHTML='<p class="hint">點上方的分類查看，可以一次點多個，再點一次就會收起來。</p>';return;}
-    function card(k,l){
-      var t=sum(l);
-      var det=l.slice().sort(function(a,b){return a.date<b.date?1:-1}).map(function(i){return '<div>'+esc(i.note||k)+' $'+fmt(i.amount)+' · '+esc(i.pay||"未標示")+' · '+i.date.slice(5).replace("-","/")+'</div>'}).join("");
-      return '<div class="dcard drow"><div class="dl"><small>'+esc(k)+' · 本月'+w+'</small><div class="dtot '+stype+'">$'+fmt(t)+'</div></div><div class="dr">'+det+'</div></div>';
-    }
-    $("detail").innerHTML=sel.map(function(k){return card(k,by[k])}).join("");
-  }
-  var fEdit=null,fType="exp";
-  function ymOf(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
-  function fillFCats(){$("fCat").innerHTML=(fType==="exp"?EXP:INC).map(function(c){return "<option>"+c+"</option>"}).join("");}
-  function setFT(t){fType=t;$("fExp").setAttribute("aria-pressed",t==="exp");$("fInc").setAttribute("aria-pressed",t==="inc");fillFCats();}
-  $("fExp").onclick=function(){setFT("exp")};
-  $("fInc").onclick=function(){setFT("inc")};
-  function tab(t){var f=t==="fixed";$("pgMain").hidden=f;$("pgFixed").hidden=!f;$("tabMain").setAttribute("aria-pressed",!f);$("tabFixed").setAttribute("aria-pressed",f);if(f)renderFixed();}
-  $("tabMain").onclick=function(){tab("main")};
-  $("tabFixed").onclick=function(){tab("fixed")};
-  function renderFixed(){
-    var inc=0,ex=0;
-    fixed.forEach(function(f){if(f.type==="inc")inc+=f.amount;else ex+=f.amount;});
-    var net=inc-ex;
-    $("fnet").textContent=(net<0?"-":"")+"$"+fmt(Math.abs(net));
-    $("fin").textContent="$"+fmt(inc);$("fex").textContent="$"+fmt(ex);
-    var l=fixed.slice().sort(function(a,b){return a.day-b.day});
-    $("flist").innerHTML=l.length?l.map(function(f){
-      return '<div class="item'+(String(f.id)===String(fEdit)?" edit":"")+'"><div class="m"><b>'+esc(f.name)+'</b><span>每月 '+f.day+' 日 · '+esc(f.cat)+' · '+esc(f.pay||"未標示")+'</span></div>'
-        +'<div class="a '+(f.type==="inc"?"inc":"exp")+'">'+(f.type==="inc"?"+":"-")+"$"+fmt(f.amount)+'</div>'
-        +'<button data-fedit="'+f.id+'" aria-label="修改">✎</button><button data-fdel="'+f.id+'" aria-label="刪除">✕</button></div>';
-    }).join(""):'<div class="empty">還沒有固定項目，例如房租、薪水、訂閱費。</div>';
-  }
-  function stopFEdit(){fEdit=null;$("fAdd").textContent="新增固定項目";$("fCancel").hidden=true;}
-  function clearFForm(){$("fName").value="";$("fAmt").value="";$("fErr").textContent="";}
-  $("fCancel").onclick=function(){stopFEdit();clearFForm();renderFixed();};
-  $("fAdd").onclick=function(){
-    var n=$("fName").value.trim(),a=parseFloat($("fAmt").value),d=parseInt($("fDay").value,10);
-    if(!n){$("fErr").textContent="請輸入名稱。";return;}
-    if(!(a>0)){$("fErr").textContent="請輸入大於 0 的金額。";return;}
-    if(!(d>=1&&d<=31)){$("fErr").textContent="每月幾號請填 1 到 31。";return;}
-    var f={id:fEdit||Date.now(),type:fType,name:n,amount:a,cat:$("fCat").value,pay:$("fPay").value,day:d,from:ymOf(new Date()),last:""};
-    if(fEdit){
-      var old=fixed.filter(function(x){return String(x.id)===String(fEdit)})[0];
-      if(old){f.from=old.from;f.last=old.last;}
-      fixed=fixed.map(function(x){return String(x.id)===String(fEdit)?f:x});
-    }else{fixed.push(f);}
-    saveFixed();fput([f]);stopFEdit();clearFForm();genFixed();renderFixed();
-  };
-  $("flist").onclick=function(e){
-    var t=e.target;if(!t.getAttribute)return;
-    var ed=t.getAttribute("data-fedit"),dl=t.getAttribute("data-fdel");
-    if(ed){
-      var f=fixed.filter(function(x){return String(x.id)===ed})[0];if(!f)return;
-      fEdit=f.id;setFT(f.type);
-      $("fName").value=f.name;$("fAmt").value=f.amount;$("fCat").value=f.cat;if(f.pay)$("fPay").value=f.pay;$("fDay").value=f.day;
-      $("fAdd").textContent="儲存修改";$("fCancel").hidden=false;$("fErr").textContent="";
-      renderFixed();$("fName").scrollIntoView({behavior:"smooth",block:"center"});$("fName").focus();
-    }else if(dl){
-      if(String(fEdit)===dl){stopFEdit();clearFForm();}
-      fixed=fixed.filter(function(x){return String(x.id)!==dl});
-      saveFixed();fdel([dl]);renderFixed();
-    }
-  };
-  function genFixed(){
-    var now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),cd=now.getDate();
-    var ne=[],ch=[];
-    fixed.forEach(function(f){
-      var p=String(f.from||ymOf(now)).split("-"),y=+p[0],m=+p[1]-1,last=f.last||"",did=false;
-      while(y<cy||(y===cy&&m<=cm)){
-        var ym=y+"-"+String(m+1).padStart(2,"0");
-        var day=Math.min(f.day,new Date(y,m+1,0).getDate());
-        if(!((y<cy||m<cm)||day<=cd))break;
-        if(ym>last){
-          var id="fx-"+f.id+"-"+ym;
-          if(!items.some(function(i){return i.id===id}))ne.push({id:id,type:f.type,amount:f.amount,cat:f.cat,pay:f.pay||"",date:ym+"-"+String(day).padStart(2,"0"),note:f.name});
-          last=ym;did=true;
-        }
-        m++;if(m>11){m=0;y++;}
-      }
-      if(did){f.last=last;ch.push(f);}
-    });
-    if(ne.length){ne.forEach(function(e){items.push(e)});save();cput(ne);}
-    if(ch.length){saveFixed();fput(ch);}
-    if(ne.length||ch.length)render();
-  }
-  document.addEventListener("visibilitychange",function(){if(!document.hidden&&(!cloudConfigured||(gotI&&gotF)))genFixed();});
-  var revealed=false;
-  function reveal(){revealed=true;document.querySelector("main").style.visibility="";}
-  function acctUI(){
-    if(!cloudConfigured){$("acct").hidden=true;return;}
-    $("acct").hidden=false;
-    if(cloud.on){$("who").textContent=cloud.user+" · "+cloud.st;$("acctbtn").textContent="登出";}
-    else{$("who").textContent="只存在這支手機";$("acctbtn").textContent="登入雲端";}
-  }
-  if(cloudConfigured){document.querySelector("main").style.visibility="hidden";setTimeout(function(){if(!revealed){reveal();acctUI();msg("無法連線雲端，目前只存在這支手機。");}},7000);}
-  $("acctbtn").onclick=function(){if(cloud.on&&window.Cloud)window.Cloud.logout();else $("auth").hidden=false;};
-  function aerr(t){$("aerr").textContent=t;}
-  function authMsg(e){var c=(e&&e.code)||"";return /invalid-credential|wrong-password|user-not-found/.test(c)?"Email 或密碼不正確":/email-already/.test(c)?"這個 Email 已註冊過，請直接登入":/weak-password/.test(c)?"密碼至少要 6 碼":/invalid-email/.test(c)?"Email 格式不正確":/network/.test(c)?"網路連線失敗":/popup/.test(c)?"Google 登入視窗被擋住或關閉了，請允許彈出視窗後再試":/unauthorized-domain/.test(c)?"此網址尚未加入 Firebase 的授權網域":/operation-not-allowed/.test(c)?"尚未在 Firebase 啟用這個登入方式":/too-many/.test(c)?"嘗試次數過多，請稍後再試":"發生錯誤："+c;}
-  function authDo(k){
-    if(!window.Cloud){aerr("雲端尚未載入，請檢查網路後重新整理。");return;}
-    var e=$("em").value.trim(),p=$("pw").value;
-    if(!e||!p){aerr("請輸入 Email 和密碼");return;}
-    aerr("處理中…");
-    window.Cloud[k](e,p).then(function(){aerr("");}).catch(function(x){aerr(authMsg(x));});
-  }
-  $("login").onclick=function(){authDo("signIn")};
-  $("google").onclick=function(){if(!window.Cloud){aerr("雲端尚未載入，請檢查網路後重新整理。");return;}aerr("處理中…");window.Cloud.google().then(function(){aerr("");}).catch(function(x){aerr(authMsg(x));});};
-  $("signup").onclick=function(){authDo("signUp")};
-  $("forgot").onclick=function(){var e=$("em").value.trim();if(!e){aerr("請先輸入 Email");return;}if(!window.Cloud)return;window.Cloud.reset(e).then(function(){aerr("已寄出重設密碼信，請查收。");}).catch(function(x){aerr(authMsg(x));});};
-  $("skip").onclick=function(){$("auth").hidden=true;};
-  var migrating=false;
-  window.App={
-    onUser:function(u){
-      reveal();stopEdit();
-      if(u){cloud.on=true;cloud.user=u.email;cloud.st="連線中";items=[];fixed=[];gotI=false;gotF=false;$("auth").hidden=true;}
-      else{cloud.on=false;cloud.user=null;items=readLocal();fixed=readFixed();$("auth").hidden=false;}
-      acctUI();render();renderFixed();if(!u)genFixed();
-    },
-    onItems:function(arr,m){
-      items=arr;cloud.st=m.pending?"☁ 待上傳":m.cache?"☁ 離線／暫存":"☁ 已同步";acctUI();render();gotI=true;if(gotF)genFixed();
-      var old=readLocal();
-      if(old.length&&!migrating&&window.Cloud){
-        migrating=true;
-        var have={};arr.forEach(function(i){have[i.id]=1});
-        var mv=old.filter(function(i){return validRec(i)&&!have[i.id]});
-        try{localStorage.setItem(KEY+"-premigrate-backup",JSON.stringify(old));}catch(e){}
-        window.Cloud.putMany(mv).then(function(){try{localStorage.setItem(KEY,"[]");}catch(e){}migrating=false;if(mv.length)msg("已把這支手機原有的 "+mv.length+" 筆帳目上傳到雲端。");}).catch(function(){migrating=false;});
-      }
-    },
-    onFixed:function(arr){
-      fixed=arr;gotF=true;renderFixed();if(gotI)genFixed();
-      var lf=readFixed();
-      if(lf.length&&window.Cloud){var hv={};arr.forEach(function(x){hv[x.id]=1});window.Cloud.putFixed(lf.filter(function(x){return !hv[x.id]})).then(function(){try{localStorage.setItem(FK,"[]");}catch(e){}}).catch(function(){});}
-    },
-    onError:function(e){msg(e&&e.code==="permission-denied"?"雲端沒有權限，請確認 Firestore 規則已發布。":"雲端錯誤："+((e&&e.code)||e));}
-  };
-  $("pay").innerHTML=PAY.map(function(c){return "<option>"+c+"</option>"}).join("");
-  $("fPay").innerHTML=PAY.map(function(c){return "<option>"+c+"</option>"}).join("");
-  $("fDay").value=new Date().getDate();
-  fillFCats();fillCats();render();renderFixed();if(!cloudConfigured)genFixed();
-})();
-</script>
 <script type="module">
-(async function(){
-  var cfg=window.FIREBASE_CONFIG||{};
-  if(!cfg.apiKey||cfg.apiKey.indexOf("YOUR_")===0)return;
-  try{
-    var B="https://www.gstatic.com/firebasejs/10.14.1/";
-    var A=await import(B+"firebase-app.js"),Au=await import(B+"firebase-auth.js"),F=await import(B+"firebase-firestore.js");
-    var app=A.initializeApp(cfg),auth=Au.getAuth(app);
-    var db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})});
-    var uid=null,unsub=null,unsub2=null;
-    function ref(id){return F.doc(db,"users",uid,"entries",String(id));}
-    function body(r){return {type:r.type,amount:+r.amount,cat:String(r.cat||"其他"),pay:String(r.pay||""),date:r.date,note:String(r.note||"")};}
-    function fref(id){return F.doc(db,"users",uid,"fixed",String(id));}
-    function fbody(r){return {type:r.type,name:String(r.name||""),amount:+r.amount,cat:String(r.cat||""),pay:String(r.pay||""),day:+r.day,from:String(r.from||""),last:String(r.last||"")};}
-    function run(p){return p.catch(function(e){App.onError(e);throw e;});}
-    function batches(a,fn){var o=[];for(var i=0;i<a.length;i+=400){(function(c){var b=F.writeBatch(db);c.forEach(function(x){fn(b,x);});o.push(b.commit());})(a.slice(i,i+400));}return run(Promise.all(o));}
-    window.Cloud={
-      signIn:function(e,p){return Au.signInWithEmailAndPassword(auth,e,p);},
-      signUp:function(e,p){return Au.createUserWithEmailAndPassword(auth,e,p);},
-      reset:function(e){return Au.sendPasswordResetEmail(auth,e);},
-      logout:function(){return Au.signOut(auth);},
-      google:function(){return Au.signInWithPopup(auth,new Au.GoogleAuthProvider());},
-      putMany:function(l){return batches(l,function(b,r){b.set(ref(r.id),body(r));});},
-      putFixed:function(l){return batches(l,function(b,r){b.set(fref(r.id),fbody(r));});},
-      delFixed:function(l){return batches(l,function(b,id){b.delete(fref(id));});},
-      delMany:function(l){return batches(l,function(b,id){b.delete(ref(id));});}
-    };
-    Au.onAuthStateChanged(auth,function(u){
-      if(unsub){unsub();unsub=null;}
-      if(unsub2){unsub2();unsub2=null;}
-      if(!u){uid=null;App.onUser(null);return;}
-      uid=u.uid;App.onUser({email:u.email});
-      unsub2=F.onSnapshot(F.collection(db,"users",uid,"fixed"),function(s){
-        var a=[];
-        s.forEach(function(d){var x=d.data(),n=Number(d.id);a.push({id:isNaN(n)?d.id:n,type:x.type,name:x.name,amount:x.amount,cat:x.cat,pay:x.pay,day:x.day,from:x.from,last:x.last});});
-        App.onFixed(a);
-      },function(e){App.onError(e);});
-      unsub=F.onSnapshot(F.collection(db,"users",uid,"entries"),function(s){
-        var a=[];
-        s.forEach(function(d){var x=d.data(),n=Number(d.id);a.push({id:isNaN(n)?d.id:n,type:x.type,amount:x.amount,cat:x.cat,pay:x.pay,date:x.date,note:x.note});});
-        App.onItems(a,{pending:s.metadata.hasPendingWrites,cache:s.metadata.fromCache});
-      },function(e){App.onError(e);});
-    });
-  }catch(e){if(window.App)App.onError(e);}
-})();
+// Firebase 設定（專案 shopping-18566）
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAaLwE4f3CgL6lZmVNk78_l-zgqSgcndd8",
+  authDomain: "shopping-18566.firebaseapp.com",
+  projectId: "shopping-18566",
+  storageBucket: "shopping-18566.firebasestorage.app",
+  messagingSenderId: "352943034346",
+  appId: "1:352943034346:web:347faf645e9801950e6c93",
+  measurementId: "G-09TVEYLXQC"
+};
+const KEY = "shopping-tracker-v1";
+let items = [];
+let filter = "all";
+let editId = null;
+
+const $ = id => document.getElementById(id);
+const today = () => {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+};
+const money = n => "NT$ " + Number(n).toLocaleString("zh-TW");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function load(){
+  try { items = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ items = []; }
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(items)); }
+  catch(e){ alert("無法儲存資料，請先用「備份 JSON」把資料存下來。"); }
+}
+
+function nameHtml(n){
+  return /^https?:\/\//i.test(n)
+    ? '<a href="' + esc(n) + '" target="_blank" rel="noopener noreferrer">' + esc(n) + '</a>'
+    : esc(n);
+}
+
+function render(){
+  const total = items.reduce((s,i)=>s+i.amount,0);
+  const unpaid = items.filter(i=>!i.paid).reduce((s,i)=>s+i.amount,0);
+  const wait = items.filter(i=>!i.arrival).length;
+  $("sTotal").textContent = money(total);
+  $("sUnpaid").textContent = money(unpaid);
+  $("sWait").textContent = wait + " 件";
+
+  const shown = items
+    .filter(i => filter==="all" || (filter==="unpaid" && !i.paid) ||
+      (filter==="wait" && !i.arrival) || (filter==="done" && i.paid && i.arrival))
+    .sort((a,b)=> b.order.localeCompare(a.order) || b.id - a.id);
+
+  if(!shown.length){
+    $("list").innerHTML = '<div class="empty">' +
+      (items.length ? "這個分類目前沒有商品" : "還沒有記錄，從上面新增第一筆吧") + '</div>';
+    return;
+  }
+  $("list").innerHTML = shown.map(i => `
+    <div class="item">
+      <div class="top">
+        <div class="name">${nameHtml(i.name)}</div>
+        <div class="price">${money(i.amount)}</div>
+      </div>
+      <div class="meta">
+        <span class="chip">${esc(i.pay)}</span>
+        <span class="chip ${i.paid?"ok":"bad"}">${i.paid?"已付款":"未付款"}</span>
+        <span class="chip">下單 ${esc(i.order)}</span>
+        <span class="chip ${i.arrival?"ok":"wait"}">${i.arrival?"到貨 "+esc(i.arrival):"未到貨"}</span>
+      </div>
+      <div class="row">
+        <button data-a="pay" data-id="${i.id}">${i.paid?"改成未付款":"標記已付款"}</button>
+        ${i.arrival?"":`<button data-a="arrive" data-id="${i.id}">今天到貨</button>`}
+        <button data-a="edit" data-id="${i.id}">編輯</button>
+        <button class="danger" data-a="del" data-id="${i.id}">刪除</button>
+      </div>
+    </div>`).join("");
+}
+
+function resetForm(){
+  $("f").reset();
+  $("od").value = today();
+  editId = null;
+  $("saveBtn").textContent = "新增";
+  $("cancelBtn").hidden = true;
+}
+
+$("f").addEventListener("submit", e => {
+  e.preventDefault();
+  const data = {
+    name: $("name").value.trim(),
+    amount: Math.round(Number($("amount").value)) || 0,
+    pay: $("pay").value,
+    paid: $("paid").checked,
+    order: $("od").value,
+    arrival: $("ad").value
+  };
+  if(!data.name) return;
+  if(data.arrival && data.arrival < data.order){
+    alert("到貨日不能早於下單日。");
+    return;
+  }
+  upsert(editId ? {...items.find(i=>i.id===editId), ...data} : {id: Date.now(), ...data});
+  resetForm();
+});
+
+$("cancelBtn").addEventListener("click", resetForm);
+
+$("list").addEventListener("click", e => {
+  const b = e.target.closest("button[data-a]");
+  if(!b) return;
+  const id = Number(b.dataset.id);
+  const it = items.find(i=>i.id===id);
+  if(!it) return;
+  const a = b.dataset.a;
+  if(a==="pay"){ upsert({...it, paid: !it.paid}); }
+  else if(a==="arrive"){ upsert({...it, arrival: today() < it.order ? it.order : today()}); }
+  else if(a==="del"){ if(confirm("確定刪除「" + it.name + "」？")){ remove(id); } }
+  else if(a==="edit"){
+    editId = id;
+    $("name").value = it.name; $("amount").value = it.amount; $("pay").value = it.pay;
+    $("paid").checked = it.paid; $("od").value = it.order; $("ad").value = it.arrival || "";
+    $("saveBtn").textContent = "儲存修改";
+    $("cancelBtn").hidden = false;
+    $("f").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+});
+
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-f]");
+  if(!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x===b));
+  render();
+});
+
+function download(name, text, type){
+  const blob = new Blob([text], {type});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+$("expCsv").addEventListener("click", () => {
+  const q = v => '"' + String(v).replace(/"/g,'""') + '"';
+  const rows = [["商品名稱或網址","總金額","付款方式","是否付錢","下單日","到貨日"]]
+    .concat(items.map(i=>[i.name,i.amount,i.pay,i.paid?"是":"否",i.order,i.arrival||""]));
+  download("網購記錄-" + today() + ".csv", "\ufeff" + rows.map(r=>r.map(q).join(",")).join("\n"), "text/csv");
+});
+$("expJson").addEventListener("click", () =>
+  download("網購備份-" + today() + ".json", JSON.stringify(items, null, 2), "application/json"));
+$("impBtn").addEventListener("click", () => $("impFile").click());
+$("impFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if(!Array.isArray(data)) throw 0;
+      if(!confirm("匯入會取代目前的 " + items.length + " 筆資料，確定嗎？")) return;
+      const arr = data.map((i,n)=>({
+        id: i.id || Date.now()+n, name: String(i.name||""), amount: Number(i.amount)||0,
+        pay: i.pay||"其他", paid: !!i.paid, order: i.order||today(), arrival: i.arrival||""
+      }));
+      replaceAll(arr);
+    } catch(err){ alert("這不是有效的備份檔。"); }
+  };
+  r.readAsText(file);
+  e.target.value = "";
+});
+
+let cloud = null, fb = null, ready = null, unsub = null;
+const ref = id => cloud.fn.doc(cloud.db, "users", cloud.uid, "purchases", String(id));
+const CFG_KEY = "shopping-fb-config";
+function getCfg(){
+  if(FIREBASE_CONFIG) return FIREBASE_CONFIG;
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)); } catch(e){ return null; }
+}
+function setStatus(t, cls){ $("syncTxt").textContent = t; $("syncTxt").className = cls || ""; }
+function syncErr(e){
+  const m = e.code === "permission-denied" ? "沒有權限，請檢查 Firestore 規則" : (e.code || e.message);
+  setStatus("同步失敗：" + m, "s-bad");
+}
+
+function upsert(it){
+  items = items.some(i=>i.id===it.id) ? items.map(i=>i.id===it.id ? it : i) : items.concat(it);
+  save(); render();
+  if(cloud) cloud.fn.setDoc(ref(it.id), it).catch(syncErr);
+}
+function remove(id){
+  items = items.filter(i=>i.id!==id);
+  save(); render();
+  if(cloud) cloud.fn.deleteDoc(ref(id)).catch(syncErr);
+}
+function replaceAll(arr){
+  const old = items;
+  items = arr; save(); render();
+  if(!cloud) return;
+  arr.forEach(i => cloud.fn.setDoc(ref(i.id), i).catch(syncErr));
+  old.filter(o=>!arr.some(i=>i.id===o.id)).forEach(o => cloud.fn.deleteDoc(ref(o.id)).catch(syncErr));
+}
+
+function startSync(user){
+  const F = fb.F, localAtLogin = items.slice();
+  let first = true;
+  cloud = {fn: F, db: fb.db, uid: user.uid};
+  setStatus("同步中…");
+  unsub = F.onSnapshot(F.collection(fb.db, "users", user.uid, "purchases"), snap => {
+    const remote = snap.docs.map(d => d.data());
+    if(first){
+      first = false;
+      const ids = new Set(remote.map(r=>r.id));
+      const extra = localAtLogin.filter(l=>!ids.has(l.id));
+      extra.forEach(l => F.setDoc(ref(l.id), l).catch(syncErr));
+      items = remote.concat(extra);
+    } else {
+      items = remote;
+    }
+    save(); render();
+    setStatus("已同步 · " + user.email, "s-ok");
+  }, syncErr);
+}
+
+async function connect(cfg){
+  setStatus("連線中…");
+  const base = "https://www.gstatic.com/firebasejs/10.14.1/";
+  const [app, A, F] = await Promise.all([
+    import(base + "firebase-app.js"), import(base + "firebase-auth.js"), import(base + "firebase-firestore.js")]);
+  const a = app.getApps().length ? app.getApps()[0] : app.initializeApp(cfg);
+  fb = {A, F, auth: A.getAuth(a), db: F.getFirestore(a)};
+  A.onAuthStateChanged(fb.auth, user => {
+    if(unsub){ unsub(); unsub = null; }
+    if(user) startSync(user);
+    else { cloud = null; setStatus("尚未登入雲端"); }
+  });
+}
+
+function parseCfg(t){
+  try {
+    const from = t.indexOf("{", Math.max(0, t.indexOf("firebaseConfig")));
+    const s = t.slice(from, t.lastIndexOf("}") + 1)
+      .replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":').replace(/,\s*}/g, "}");
+    return JSON.parse(s);
+  } catch(e){ return null; }
+}
+function errMsg(e){
+  return ({
+    "auth/invalid-credential": "帳號或密碼錯誤",
+    "auth/invalid-email": "Email 格式不對",
+    "auth/email-already-in-use": "這個 Email 已註冊，請直接登入",
+    "auth/weak-password": "密碼至少要 6 碼",
+    "auth/operation-not-allowed": "Firebase 尚未開啟「電子郵件/密碼」登入",
+    "auth/network-request-failed": "網路連線失敗"
+  })[e.code] || (e.code || e.message);
+}
+
+function showDlg(){
+  const cfg = getCfg();
+  $("vCfg").hidden = !!cfg;
+  $("vAuth").hidden = !cfg || !!cloud;
+  $("vAcc").hidden = !cloud;
+  $("chgCfg").hidden = !!FIREBASE_CONFIG;
+  if(cloud) $("accMail").textContent = fb.auth.currentUser.email;
+  $("dErr").textContent = "";
+  $("dlg").showModal();
+}
+async function authDo(reg){
+  $("dErr").textContent = "";
+  try {
+    await ready;
+    const A = fb.A;
+    await (reg ? A.createUserWithEmailAndPassword : A.signInWithEmailAndPassword)(fb.auth, $("em").value.trim(), $("pw").value);
+    $("pw").value = "";
+    $("dlg").close();
+  } catch(e){ $("dErr").textContent = errMsg(e); }
+}
+
+$("syncBtn").addEventListener("click", showDlg);
+document.querySelectorAll(".dclose").forEach(b => b.addEventListener("click", () => $("dlg").close()));
+$("cfgSave").addEventListener("click", () => {
+  const cfg = parseCfg($("cfgTxt").value);
+  if(!cfg || !cfg.apiKey || !cfg.projectId){ alert("格式不對，請貼上完整的 firebaseConfig。"); return; }
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch(e){}
+  $("dlg").close();
+  ready = connect(cfg).catch(syncErr);
+});
+$("chgCfg").addEventListener("click", e => {
+  e.preventDefault();
+  try { localStorage.removeItem(CFG_KEY); } catch(err){}
+  location.reload();
+});
+$("doLogin").addEventListener("click", () => authDo(false));
+$("doReg").addEventListener("click", () => authDo(true));
+$("doOut").addEventListener("click", () => { fb.A.signOut(fb.auth); $("dlg").close(); });
+
+load(); resetForm(); render();
+{ const cfg = getCfg(); if(cfg) ready = connect(cfg).catch(syncErr); }
 </script>
 </body>
 </html>
